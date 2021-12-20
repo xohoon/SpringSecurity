@@ -1,10 +1,12 @@
 package xohoon.Security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,20 +31,28 @@ import java.io.IOException;
 
 //@Configuration
 //@EnableWebSecurity
-public class SecurityConfigDoc extends WebSecurityConfigurerAdapter {
+//public class SecurityConfigDoc extends WebSecurityConfigurerAdapter {
+    public class SecurityConfigDoc {
 
-    @Autowired
+//    @Autowired
     UserDetailsService userDetailsService;
 
-    @Override
+//    @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception { // 메모리로 사용자 생성
         auth.inMemoryAuthentication().withUser("xohoon").password("{noop}1212").roles("USER"); // noop -> 암호화 하지 않는다
         auth.inMemoryAuthentication().withUser("sys").password("{nope}1212").roles("SYS");
         auth.inMemoryAuthentication().withUser("admin").password("{nope}1212").roles("ADMIN");
     }
 
-    @Override
+//    @Override
+    public void configure(WebSecurity web) throws Exception {
+        // 보안필터를 전혀 거치지 않음 (permitAll 은 보안필터를 거쳐서 통과됨)
+        web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    }
+
+//    @Override
     protected void configure(HttpSecurity http) throws Exception {
+        System.out.println("WHAT THE..");
         /*
         * 인가정책
         * */
@@ -174,7 +184,4 @@ public class SecurityConfigDoc extends WebSecurityConfigurerAdapter {
 
 
     }
-
-
-
 }
