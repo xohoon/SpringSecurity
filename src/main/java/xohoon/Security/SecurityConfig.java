@@ -2,6 +2,7 @@ package xohoon.Security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,10 +11,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http // 선언적 방식 -> 서비스는 동적 방식으로 변경
                 .antMatcher("/test/**") // 해당 경로의 권한 설정
                 .authorizeRequests()
+                        .antMatchers("/login").permitAll()
                         .antMatchers("/test/login", "/test/users/**").permitAll() // 해당 경로에서는 인가 심사
                         .antMatchers("/test/mypage").hasRole("USER") // USER 권한 가져야함
                         .antMatchers("/test/admin/pay").access("hasRole('ADMIN')") // 세부 경로 설정 후
@@ -66,22 +73,31 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .usernameParameter("userId") // Front ID Parameter name set
                 .passwordParameter("pwd") // Front PW Parameter name set
                 .loginProcessingUrl("/login_proc") // 로그인 Form Action url name set
-                .successHandler(new AuthenticationSuccessHandler() {
+                .successHandler(new AuthenticationSuccessHandler() { // 로그인 성공 후 핸들러
                     @Override
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                        System.out.println("Authentication = " + authentication.getName());
-                        response.sendRedirect("/");
+                        RequestCache requestCache = new HttpSessionRequestCache();
+                        SavedRequest savedRequest = requestCache.getRequest(request, response);
+                        String redirectUrl = savedRequest.getRedirectUrl(); // 접근을 시도했던 세션에 저장된 페이지 기억
+                        response.sendRedirect(redirectUrl); // 인증 완료 후 가려고 했던 페이지로 이동
 
                     }
-                }) // 로그인 성공 후 핸들러
-                .failureHandler(new AuthenticationFailureHandler() {
+                })
+                .failureHandler(new AuthenticationFailureHandler() { // 로그인 실패 후 핸들러
                     @Override
                     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
                         System.out.println("exception = " + exception.getMessage());
                         response.sendRedirect("/login");
                     }
-                }) // 로그인 실패 후 핸들러
+                })
                 .permitAll();
+
+        /*
+        * 인증정책 - csrf token 인증
+        * */
+        http.csrf() // -> default
+//                .disable() // 비활성화
+        ;
 
         /*
         * 인증정책 - logout (기본적으로 FORM POST 방식)
@@ -117,8 +133,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         * 인증정책 - 동시 세션 제어
         * */
 
-        http
-                .sessionManagement() // 세션 제어 활성화
+        http.sessionManagement() // 세션 제어 활성화
                 .maximumSessions(1) // 최대 허용 가능 세션 수, -1 -> 무제한 허용
                 .maxSessionsPreventsLogin(false) //동시 로그인 차단, default -> false 기존 세션 만료
 //                .expiredUrl() // 세셩 만료 시 이동 할 페이지
@@ -139,6 +154,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .sessionCreationPolicy(SessionCreationPolicy.NEVER) // 생성하지 않지만 이미 존재하면 사용
 //                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 생성하지 않고 존재해도 사용 하지 않음
         ;
+
+        /*
+         * 인증/인가 정책 - 예외처리
+         * */
+        http.exceptionHandling() // 예외처리 기능 활성화
+                .authenticationEntryPoint(new AuthenticationEntryPoint() { // 인증 예외 발생시
+                    @Override
+                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+                        response.sendRedirect("/login");
+                    }
+                })
+                .accessDeniedHandler(new AccessDeniedHandler() { // 인가 예외 발생시
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        response.sendRedirect("/denied");
+                    }
+                });
+
+
     }
+
+
 
 }
