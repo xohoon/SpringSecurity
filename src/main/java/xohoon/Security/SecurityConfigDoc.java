@@ -27,9 +27,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+//@Configuration
+//@EnableWebSecurity
+public class SecurityConfigDoc extends WebSecurityConfigurerAdapter {
 
     @Autowired
     UserDetailsService userDetailsService;
