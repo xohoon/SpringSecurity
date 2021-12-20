@@ -37,6 +37,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated();
 
         /*
+        * 인가정책 - 권한 설정 (구체적인 경로 후 큰 범위 경로가 뒤로 오도록 설정
+        * */
+        http
+                .antMatcher("/test/**") // 해당 경로의 권한 설정
+                .authorizeRequests()
+                        .antMatchers("/test/login", "/test/users/**").permitAll() // 해당 경로에서는 인가 심사
+                        .antMatchers("/test/mypage").hasRole("USER") // USER 권한 가져야함
+                        .antMatchers("/test/admin/pay").access("hasRole('ADMIN')") // 세부 경로 설정 후
+                        .antMatchers("/test/admin/**").access("hasRole('ADMIN') or hasRole('SYS')") // 큰 범위 경로 설정
+                        .anyRequest().authenticated();
+
+        /*
         * 인증정책 -> Form 인증
         * */
         http.formLogin() // 기본 로그인 폼. Form 인증(properties 에 아이디 비밀번호 설정 가능)
