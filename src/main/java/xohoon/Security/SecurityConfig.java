@@ -2,6 +2,7 @@ package xohoon.Security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -28,6 +29,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     UserDetailsService userDetailsService;
 
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception { // 메모리로 사용자 생성
+        auth.inMemoryAuthentication().withUser("xohoon").password("{noop}1212").roles("USER"); // noop -> 암호화 하지 않는다
+        auth.inMemoryAuthentication().withUser("sys").password("{nope}1212").roles("SYS");
+        auth.inMemoryAuthentication().withUser("admin").password("{nope}1212").roles("ADMIN");
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         /*
         * 인가정책
@@ -37,16 +45,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated();
 
         /*
-        * 인가정책 - 권한 설정 (구체적인 경로 후 큰 범위 경로가 뒤로 오도록 설정
+        * 인가정책 - 권한 설정 (구체적인 경로 후 큰 범위 경로가 뒤로 오도록 설정)
         * */
-        http
+        http // 선언적 방식 -> 서비스는 동적 방식으로 변경
                 .antMatcher("/test/**") // 해당 경로의 권한 설정
                 .authorizeRequests()
                         .antMatchers("/test/login", "/test/users/**").permitAll() // 해당 경로에서는 인가 심사
                         .antMatchers("/test/mypage").hasRole("USER") // USER 권한 가져야함
                         .antMatchers("/test/admin/pay").access("hasRole('ADMIN')") // 세부 경로 설정 후
                         .antMatchers("/test/admin/**").access("hasRole('ADMIN') or hasRole('SYS')") // 큰 범위 경로 설정
-                        .anyRequest().authenticated();
+                        .anyRequest().authenticated(); // 위 인증을 제외한 모든 요청은 인증을 받은 사용자만 접근 가능
 
         /*
         * 인증정책 -> Form 인증

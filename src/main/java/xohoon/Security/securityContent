@@ -1,0 +1,13 @@
+*** 인가 API 표현식
+- authenticated() -> 인증된 사용자의 접근 허용
+- fullyAuthenticated() -> 인증된 사용자의 접근 허용, remember-me 인증 제외
+- permitAll() -> 무조건 모든 사용자 접근 허용
+- denyAll() -> 무조건 접근 허용 x
+- anonymous() -> 익명 사용자에게만 접근 허용 (role-USER, role-ADMIN 도 접근 불가)
+- rememberMe() -> 기억하기를 통해 인증된 사용자의 접근을 허용
+- access(String) -> 주어진 SpEL 표현식의 평가 결과가 true 이면 접근 허용
+- hasRole(String) -> 사용자가 부여받은 역할에 부합하면 접근 허용
+- hasAuthority(String) -> 사용자가 주어진 권한이 있다면 접근 허용
+- hasAnyRole(String...) -> 정의된 역할 중 부합하면 접근 허용
+- hasAnyAuthority(String...) -> 정의된 권한 중 부합하면 접근 허용
+- hasIpAddress(String) -> 정의된 IP 로부터 요청이 왔다면 접근 허용
