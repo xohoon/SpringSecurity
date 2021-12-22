@@ -27,9 +27,9 @@ import xohoon.Security.security.provider.FormAuthenticationProvider;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private AuthenticationSuccessHandler formAuthenticationSuccessHandler;
     @Autowired
-    private AuthenticationFailureHandler customAuthenticationFailureHandler;
+    private AuthenticationFailureHandler formAuthenticationFailureHandler;
     @Autowired
     private AuthenticationDetailsSource formAuthenticationDetailsSource;
     @Autowired
@@ -62,8 +62,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .loginProcessingUrl("/login_proc")
                 .defaultSuccessUrl("/")
                 .authenticationDetailsSource(formAuthenticationDetailsSource)
-                .successHandler(customAuthenticationSuccessHandler)
-                .failureHandler(customAuthenticationFailureHandler)
+                .successHandler(formAuthenticationSuccessHandler)
+                .failureHandler(formAuthenticationFailureHandler)
                 .permitAll()
         ;
         http
