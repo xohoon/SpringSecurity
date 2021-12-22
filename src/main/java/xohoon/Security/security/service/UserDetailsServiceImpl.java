@@ -10,26 +10,29 @@ import org.springframework.stereotype.Service;
 import xohoon.Security.domain.Account;
 import xohoon.Security.repository.UserRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service("userDetailsService")
-public class CustomUserDetailsService implements UserDetailsService {
-
+public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
+    @Autowired
+    private HttpServletRequest request;
+
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         Account account = userRepository.findByUsername(username);
         if (account == null) {
-            throw new UsernameNotFoundException("UsernameNotFoundException");
+            if (userRepository.countByUsername(username) == 0) {
+                throw new UsernameNotFoundException("No user found with username: " + username);
+            }
         }
-
-        List<GrantedAuthority> roles = new ArrayList<>();
+        ArrayList<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
         roles.add(new SimpleGrantedAuthority(account.getRole()));
-        AccountContext accountContext = new AccountContext(account, roles);
 
-        return accountContext;
+        return new AccountContext(account, roles);
     }
 }
