@@ -9,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import xohoon.Security.domain.Account;
+import xohoon.Security.domain.entity.Account;
 import xohoon.Security.security.token.AjaxAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
@@ -45,7 +45,6 @@ public class LoginController {
 
         if (principal instanceof UsernamePasswordAuthenticationToken) {
             account = (Account) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
-
         }else if(principal instanceof AjaxAuthenticationToken){
             account = (Account) ((AjaxAuthenticationToken) principal).getPrincipal();
         }

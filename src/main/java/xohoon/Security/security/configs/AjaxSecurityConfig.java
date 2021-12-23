@@ -7,15 +7,15 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import xohoon.Security.security.Handler.AJaxAccessDeniedHandler;
+import xohoon.Security.security.Handler.AjaxAccessDeniedHandler;
 import xohoon.Security.security.Handler.AjaxAuthenticationFailureHandler;
 import xohoon.Security.security.Handler.AjaxAuthenticationSuccessHandler;
 import xohoon.Security.security.common.AjaxLoginAuthenticationEntryPoint;
-import xohoon.Security.security.filter.AjaxLoginProcessingFilter;
 import xohoon.Security.security.provider.AjaxAuthenticationProvider;
 
 @Configuration
@@ -25,21 +25,6 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(ajaxAuthenticationProvider());
-    }
-
-    @Bean
-    public AuthenticationProvider ajaxAuthenticationProvider() {
-        return new AjaxAuthenticationProvider();
-    }
-
-    @Bean
-    public AuthenticationSuccessHandler ajaxAuthenticationSuccessHandler() {
-        return new AjaxAuthenticationSuccessHandler();
-    }
-
-    @Bean
-    public AuthenticationFailureHandler ajaxAuthenticationFailureHandler() {
-        return new AjaxAuthenticationFailureHandler();
     }
 
     @Override
@@ -73,7 +58,26 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public AccessDeniedHandler ajaxAccessDeniedHandler() {
-        return new AJaxAccessDeniedHandler();
+        return new AjaxAccessDeniedHandler();
+    }
+    @Bean
+    public AuthenticationProvider ajaxAuthenticationProvider() {
+        return new AjaxAuthenticationProvider(passwordEncoder());
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler ajaxAuthenticationSuccessHandler() {
+        return new AjaxAuthenticationSuccessHandler();
+    }
+
+    @Bean
+    public AuthenticationFailureHandler ajaxAuthenticationFailureHandler() {
+        return new AjaxAuthenticationFailureHandler();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
 /*

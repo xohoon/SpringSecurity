@@ -7,12 +7,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import xohoon.Security.domain.Account;
+import xohoon.Security.domain.entity.Account;
 import xohoon.Security.repository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service("userDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -30,9 +32,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 throw new UsernameNotFoundException("No user found with username: " + username);
             }
         }
-        ArrayList<GrantedAuthority> roles = new ArrayList<GrantedAuthority>();
-        roles.add(new SimpleGrantedAuthority(account.getRole()));
+        Set<String> userRoles = account.getUserRoles()
+                .stream()
+                .map(userRole -> userRole.getRoleName())
+                .collect(Collectors.toSet());
 
-        return new AccountContext(account, roles);
+        List<GrantedAuthority> collect = userRoles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return new AccountContext(account, collect);
     }
 }
