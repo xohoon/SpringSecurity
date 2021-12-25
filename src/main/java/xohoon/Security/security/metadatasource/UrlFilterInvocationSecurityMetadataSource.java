@@ -11,19 +11,62 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @Slf4j
-public class UrlSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
+public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
 
     private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap = new LinkedHashMap<>();
     private SecurityResourceService securityResourceService;
 
-    public UrlSecurityMetadataSource(LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap, SecurityResourceService securityResourceService) {
+    public UrlFilterInvocationSecurityMetadataSource(LinkedHashMap<RequestMatcher, List<ConfigAttribute>> requestMap, SecurityResourceService securityResourceService) {
         this.requestMap = requestMap;
         this.securityResourceService = securityResourceService;
     }
 
-    public UrlSecurityMetadataSource() {
+    @Override
+    public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
 
+        HttpServletRequest request = ((FilterInvocation) object).getRequest();
+
+        if(requestMap != null){
+            for(Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : requestMap.entrySet()){
+                RequestMatcher matcher = entry.getKey();
+                if(matcher.matches(request)){
+                    return entry.getValue();
+                }
+            }
+        }
+
+        return null;
     }
+
+    @Override
+    public Collection<ConfigAttribute> getAllConfigAttributes() {
+        Set<ConfigAttribute> allAttributes = new HashSet<>();
+
+        for (Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : requestMap
+                .entrySet()) {
+            allAttributes.addAll(entry.getValue());
+        }
+        return null;
+    }
+
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return FilterInvocation.class.isAssignableFrom(clazz);
+    }
+
+    public void reload() throws Exception {
+        LinkedHashMap<RequestMatcher, List<ConfigAttribute>> reloadedMap = securityResourceService.getResourceList();
+        Iterator<Map.Entry<RequestMatcher, List<ConfigAttribute>>> iterator = reloadedMap.entrySet().iterator();
+        requestMap.clear();
+
+        while (iterator.hasNext()) {
+            Map.Entry<RequestMatcher, List<ConfigAttribute>> entry = iterator.next();
+
+            requestMap.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+/*
     @Override
     public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
         Collection<ConfigAttribute> result = null;
@@ -41,33 +84,6 @@ public class UrlSecurityMetadataSource implements FilterInvocationSecurityMetada
         }
         return result;
     }
+    */
 
-    public Collection<ConfigAttribute> getAllConfigAttributes() {
-        /*
-        Set<ConfigAttribute> allAttributes = new HashSet<>();
-        for (Map.Entry<RequestMatcher, List<ConfigAttribute>> entry : requestMap.entrySet()) {
-            allAttributes.addAll(entry.getValue());
-        }
-
-        return allAttributes;
-        */
-        return null;
-    }
-
-    public void reload() throws Exception {
-        LinkedHashMap<RequestMatcher, List<ConfigAttribute>> reloadedMap = securityResourceService.getResourceList();
-        Iterator<Map.Entry<RequestMatcher, List<ConfigAttribute>>> iterator = reloadedMap.entrySet().iterator();
-        requestMap.clear();
-
-        while (iterator.hasNext()) {
-            Map.Entry<RequestMatcher, List<ConfigAttribute>> entry = iterator.next();
-
-            requestMap.put(entry.getKey(), entry.getValue());
-        }
-    }
-
-    @Override
-    public boolean supports(Class<?> clazz) {
-        return FilterInvocation.class.isAssignableFrom(clazz);
-    }
 }

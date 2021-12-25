@@ -11,7 +11,7 @@ import xohoon.Security.domain.dto.ResourcesDTO;
 import xohoon.Security.domain.entity.Resources;
 import xohoon.Security.domain.entity.Role;
 import xohoon.Security.repository.RoleRepository;
-import xohoon.Security.security.metadatasource.UrlSecurityMetadataSource;
+import xohoon.Security.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
 import xohoon.Security.service.ResourcesService;
 import xohoon.Security.service.RoleService;
 
@@ -32,7 +32,10 @@ public class ResourcesController {
     private RoleService roleService;
 
     @Autowired
-    private UrlSecurityMetadataSource urlSecurityMetadataSource;
+    private UrlFilterInvocationSecurityMetadataSource urlSecurityMetadataSource;
+
+    @Autowired
+    private UrlFilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource;
 
     @GetMapping(value="/admin/resources")
     public String getResources(Model model) throws Exception {

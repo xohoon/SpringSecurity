@@ -1,12 +1,17 @@
 package xohoon.Security.security.configs;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.access.intercept.RunAsManager;
 import org.springframework.security.access.method.MapBasedMethodSecurityMetadataSource;
 import org.springframework.security.access.method.MethodSecurityMetadataSource;
 import org.springframework.security.access.vote.RoleHierarchyVoter;
+import xohoon.Security.security.factory.MethodResourcesMapFactoryBean;
 import xohoon.Security.security.factory.UrlResourcesMapFactoryBean;
 import xohoon.Security.security.filter.PermitAllFilter;
-import xohoon.Security.security.metadatasource.UrlSecurityMetadataSource;
+import xohoon.Security.security.interceptor.CustomMethodSecurityInterceptor;
+import xohoon.Security.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
+import xohoon.Security.security.processor.ProtectPointcutPostProcessor;
 import xohoon.Security.security.voter.IpAddressVoter;
 import xohoon.Security.service.SecurityResourceService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +34,6 @@ import java.util.List;
 @Slf4j
 public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration{
 
-    private String[] permitAllPattern = {"/", "/home", "/users", "/login"};
-
     @Autowired
     private SecurityResourceService securityResourceService;
 
@@ -44,16 +47,53 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration{
     }
 
     @Bean
-    public PermitAllFilter permitAllFilter() throws Exception {
-        PermitAllFilter permitAllFilter = new PermitAllFilter(permitAllPattern);
-        permitAllFilter.setAccessDecisionManager(affirmativeBased());
-        permitAllFilter.setSecurityMetadataSource(urlSecurityMetadataSource());
-        return permitAllFilter;
+    public MethodResourcesMapFactoryBean methodResourcesMapFactoryBean(){
+        MethodResourcesMapFactoryBean methodResourcesMapFactoryBean = new MethodResourcesMapFactoryBean();
+        methodResourcesMapFactoryBean.setSecurityResourceService(securityResourceService);
+        methodResourcesMapFactoryBean.setResourceType("method");
+        return methodResourcesMapFactoryBean;
     }
 
     @Bean
-    public UrlSecurityMetadataSource urlSecurityMetadataSource() throws Exception {
-        return new UrlSecurityMetadataSource(urlResourcesMapFactoryBean().getObject(), securityResourceService);
+    @Profile("pointcut")
+    public MethodResourcesMapFactoryBean pointcutResourcesMapFactoryBean(){
+        MethodResourcesMapFactoryBean methodResourcesMapFactoryBean = new MethodResourcesMapFactoryBean();
+        methodResourcesMapFactoryBean.setSecurityResourceService(securityResourceService);
+        methodResourcesMapFactoryBean.setResourceType("pointcut");
+        return methodResourcesMapFactoryBean;
+    }
+
+    @Bean
+    @Profile("pointcut")
+    public ProtectPointcutPostProcessor protectPointcutPostProcessor(){
+        ProtectPointcutPostProcessor protectPointcutPostProcessor = new ProtectPointcutPostProcessor(mapBasedMethodSecurityMetadataSource());
+        protectPointcutPostProcessor.setPointcutMap(pointcutResourcesMapFactoryBean().getObject());
+        return protectPointcutPostProcessor;
+    }
+
+    @Bean
+    public CustomMethodSecurityInterceptor customMethodSecurityInterceptor(MapBasedMethodSecurityMetadataSource methodSecurityMetadataSource) {
+        CustomMethodSecurityInterceptor customMethodSecurityInterceptor =  new CustomMethodSecurityInterceptor();
+        customMethodSecurityInterceptor.setAccessDecisionManager(accessDecisionManager());
+        customMethodSecurityInterceptor.setAfterInvocationManager(afterInvocationManager());
+        customMethodSecurityInterceptor.setSecurityMetadataSource(methodSecurityMetadataSource);
+        RunAsManager runAsManager = runAsManager();
+        if (runAsManager != null) {
+            customMethodSecurityInterceptor.setRunAsManager(runAsManager);
+        }
+
+        return customMethodSecurityInterceptor;
+    }
+
+
+
+
+
+
+
+    @Bean
+    public UrlFilterInvocationSecurityMetadataSource urlSecurityMetadataSource() throws Exception {
+        return new UrlFilterInvocationSecurityMetadataSource(urlResourcesMapFactoryBean().getObject(), securityResourceService);
     }
 
     @Bean
@@ -87,6 +127,17 @@ public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration{
     public RoleHierarchyImpl roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
         return roleHierarchy;
+    }
+
+
+    private String[] permitAllPattern = {"/", "/home", "/users", "/login"};
+
+    @Bean
+    public PermitAllFilter permitAllFilter() throws Exception {
+        PermitAllFilter permitAllFilter = new PermitAllFilter(permitAllPattern);
+        permitAllFilter.setAccessDecisionManager(affirmativeBased());
+        permitAllFilter.setSecurityMetadataSource(urlSecurityMetadataSource());
+        return permitAllFilter;
     }
 
     @Bean

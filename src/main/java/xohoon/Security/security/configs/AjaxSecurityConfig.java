@@ -43,10 +43,10 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedHandler(ajaxAccessDeniedHandler())
         ;
 
-        customConfigurerAjax(http);
+        ajaxConfigurer(http);
     }
 
-    private void customConfigurerAjax(HttpSecurity http) throws Exception {
+    private void ajaxConfigurer(HttpSecurity http) throws Exception {
         http
                 .apply(new AjaxLoginConfigurer<>())
                 .successHandlerAjax(ajaxAuthenticationSuccessHandler())
@@ -56,10 +56,6 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
         ;
     }
 
-    @Bean
-    public AccessDeniedHandler ajaxAccessDeniedHandler() {
-        return new AjaxAccessDeniedHandler();
-    }
     @Bean
     public AuthenticationProvider ajaxAuthenticationProvider() {
         return new AjaxAuthenticationProvider(passwordEncoder());
@@ -73,6 +69,11 @@ public class AjaxSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AuthenticationFailureHandler ajaxAuthenticationFailureHandler() {
         return new AjaxAuthenticationFailureHandler();
+    }
+
+    @Bean
+    public AccessDeniedHandler ajaxAccessDeniedHandler() {
+        return new AjaxAccessDeniedHandler();
     }
 
     @Bean

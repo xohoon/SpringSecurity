@@ -26,14 +26,6 @@ public class AjaxAuthenticationToken extends AbstractAuthenticationToken {
         super.setAuthenticated(true); // must use super, as we override
     }
 
-    public Object getCredentials() {
-        return this.credentials;
-    }
-
-    public Object getPrincipal() {
-        return this.principal;
-    }
-
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
         if (isAuthenticated) {
             throw new IllegalArgumentException(
@@ -41,6 +33,14 @@ public class AjaxAuthenticationToken extends AbstractAuthenticationToken {
         }
 
         super.setAuthenticated(false);
+    }
+
+    public Object getCredentials() {
+        return this.credentials;
+    }
+
+    public Object getPrincipal() {
+        return this.principal;
     }
 
     @Override

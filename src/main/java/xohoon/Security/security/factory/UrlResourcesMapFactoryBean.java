@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class UrlResourcesMapFactoryBean implements FactoryBean<LinkedHashMap<RequestMatcher, List<ConfigAttribute>>> {
+
     private SecurityResourceService securityResourceService;
     private LinkedHashMap<RequestMatcher, List<ConfigAttribute>> resourceMap;
 

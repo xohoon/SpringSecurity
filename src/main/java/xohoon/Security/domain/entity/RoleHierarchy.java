@@ -12,6 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 @ToString(exclude = {"parentName", "roleHierarchy"})
 //@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class)
 public class RoleHierarchy implements Serializable {

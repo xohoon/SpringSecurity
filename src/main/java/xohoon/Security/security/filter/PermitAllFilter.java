@@ -13,11 +13,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PermitAllFilter extends FilterSecurityInterceptor {
+
     private static final String FILTER_APPLIED = "__spring_security_filterSecurityInterceptor_filterApplied";
     private List<RequestMatcher> permitAllRequestMatcher = new ArrayList<>();
+    private boolean observeOncePerRequest = true;
 
-    public PermitAllFilter(String... permitAllPattern) {
-        createPermitAllPattern(permitAllPattern);
+    private List<RequestMatcher> permitAllRequestMatchers =  new ArrayList<>();
+
+//    public PermitAllFilter(String... permitAllPattern) {
+//        createPermitAllPattern(permitAllPattern);
+    public PermitAllFilter(String... permitAllResources) {
+        for(String resource : permitAllResources){
+            permitAllRequestMatchers.add(new AntPathRequestMatcher(resource));
+        }
     }
 
     @Override
@@ -31,12 +39,14 @@ public class PermitAllFilter extends FilterSecurityInterceptor {
             }
         }
         if (permitAll) return null;
+
         return super.beforeInvocation(object);
     }
 
     @Override
     public void invoke(FilterInvocation fi) throws IOException, ServletException {
-        if ((fi.getRequest() != null) && (fi.getRequest().getAttribute(FILTER_APPLIED) != null)
+        if ((fi.getRequest() != null)
+                && (fi.getRequest().getAttribute(FILTER_APPLIED) != null)
                 && super.isObserveOncePerRequest()) {
             // filter already applied to this request and user wants us to observe
             // once-per-request handling, so don't re-do security checking
